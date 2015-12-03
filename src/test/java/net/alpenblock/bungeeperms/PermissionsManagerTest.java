@@ -974,6 +974,29 @@ public class PermissionsManagerTest extends AbstractTest
         assertEquals(BackEndType.YAML, pm.getBackEnd().getType());
     }
 
+    @Test
+    public void testPerServerPermissionInheritance() throws Exception
+    {
+        Group a = createGroup("a");
+        Group b = createGroup("b");
+
+        pm.addGroup(a);
+        pm.addGroup(b);
+
+        pm.addGroupInheritance(b, a);
+
+        MockPlayer player1 = platform.simulateUserJoin("Player1");
+        player1.server = "server";
+
+        pm.addUserGroup(pm.getUser(player1.getName()), b);
+
+        assertFalse(BungeePerms.getInstance().getPermissionsChecker().hasPermOnServerInWorld(player1, "some.permission"));
+
+        pm.addGroupPerServerPerm(a, "server", "some.permission");
+
+        assertTrue(BungeePerms.getInstance().getPermissionsChecker().hasPermOnServerInWorld(player1, "some.permission"));
+    }
+
     private Group createGroup(String name)
     {
         return new Group(name, new ArrayList<String>(), new ArrayList<String>(), new HashMap<String, Server>(), 0, 20, "default", false, "", "", "");
