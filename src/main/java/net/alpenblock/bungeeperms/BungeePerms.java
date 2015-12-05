@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Logger;
+
 import lombok.Getter;
 import net.alpenblock.bungeeperms.platform.EventListener;
 import net.alpenblock.bungeeperms.platform.NetworkNotifier;
@@ -13,18 +14,18 @@ import net.alpenblock.bungeeperms.platform.PluginMessageSender;
 @Getter
 public class BungeePerms
 {
-    
+
     public final static String CHANNEL = "bungeeperms";
-    
+
     @Getter
     private static BungeePerms instance;
     @Getter
     private static Logger logger;
-    
+
     private final PlatformPlugin plugin;
     private final BPConfig config;
     private final Debug debug;
-    
+
     private final PermissionsManager permissionsManager;
     private final CommandHandler commandHandler;
     private final PermissionsChecker permissionsChecker;
@@ -34,9 +35,9 @@ public class BungeePerms
     private final PermissionsResolver permissionsResolver;
     private final CleanupTask cleanupTask;
     private int cleanupTaskId = -1;
-    
+
     private boolean enabled;
-    
+
     public BungeePerms(PlatformPlugin plugin, BPConfig config, PluginMessageSender pluginMessageSender, NetworkNotifier networkNotifier, EventListener eventListener)
     {
         //static
@@ -62,7 +63,7 @@ public class BungeePerms
         permissionsResolver = new PermissionsResolver();
         cleanupTask = new CleanupTask();
     }
-    
+
     public void load()
     {
         // Print warning
@@ -89,15 +90,21 @@ public class BungeePerms
                 {
                     logger.info("There is a new version available at http://ci.codecrafter47.dyndns.eu/job/BungeePerms/");
                 }
+                else
+                {
+                    logger.info("Everything is up to date");
+                }
             }
-        } catch (IOException ex) {
+        }
+        catch (IOException ex)
+        {
             logger.warning("Failed to check whether this version is up-to-date");
         }
 
         Lang.load(plugin.getPluginFolderPath() + "/lang/" + Statics.localeString(config.getLocale()) + ".yml");
         permissionsResolver.setUseRegex(config.isUseRegexPerms());
     }
-    
+
     public void enable()
     {
         if (enabled)
@@ -105,13 +112,13 @@ public class BungeePerms
             return;
         }
         enabled = true;
-        
+
         logger.info("Activating BungeePerms ...");
         permissionsManager.enable();
         eventListener.enable();
         cleanupTaskId = plugin.registerRepeatingTask(cleanupTask, 0, config.getCleanupInterval() * 1000);
     }
-    
+
     public void disable()
     {
         if (!enabled)
@@ -119,20 +126,20 @@ public class BungeePerms
             return;
         }
         enabled = false;
-        
+
         logger.info("Deactivating BungeePerms ...");
         plugin.cancelTask(cleanupTaskId);
         cleanupTaskId = -1;
         eventListener.disable();
         permissionsManager.disable();
     }
-    
+
     public void reload(boolean notifynetwork)
     {
         disable();
         load();
         permissionsManager.reload();
-        if(notifynetwork)
+        if (notifynetwork)
         {
             networkNotifier.reloadAll("");
         }
