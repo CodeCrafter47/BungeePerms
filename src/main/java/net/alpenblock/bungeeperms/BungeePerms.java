@@ -44,28 +44,6 @@ public class BungeePerms
         instance = this;
         logger = plugin.getLogger();
 
-        //basic
-        this.plugin = plugin;
-        this.config = config;
-        debug = new Debug(plugin, config.getConfig(), "BP");
-
-        //extract packed files
-        FileExtractor.extractAll();
-        Lang.load(plugin.getPluginFolderPath() + "/lang/" + Statics.localeString(config.getLocale()) + ".yml"); //early load needed
-
-        //adv
-        permissionsManager = new PermissionsManager(plugin, config, debug);
-        permissionsChecker = new PermissionsChecker();
-        commandHandler = new CommandHandler(plugin, permissionsChecker, config);
-        this.pluginMessageSender = pluginMessageSender;
-        this.networkNotifier = networkNotifier;
-        this.eventListener = eventListener;
-        permissionsResolver = new PermissionsResolver();
-        cleanupTask = new CleanupTask();
-    }
-
-    public void load()
-    {
         // Print warning
         logger.warning("You are using an unofficial build of BungeePerms.");
         logger.warning("This build contains several experimental patches by CodeCrafter47 which have been proposed for inclusion into BungeePerms.");
@@ -101,6 +79,28 @@ public class BungeePerms
             logger.warning("Failed to check whether this version is up-to-date");
         }
 
+        //basic
+        this.plugin = plugin;
+        this.config = config;
+        debug = new Debug(plugin, config.getConfig(), "BP");
+
+        //extract packed files
+        FileExtractor.extractAll();
+        Lang.load(plugin.getPluginFolderPath() + "/lang/" + Statics.localeString(config.getLocale()) + ".yml"); //early load needed
+
+        //adv
+        permissionsManager = new PermissionsManager(plugin, config, debug);
+        permissionsChecker = new PermissionsChecker();
+        commandHandler = new CommandHandler(plugin, permissionsChecker, config);
+        this.pluginMessageSender = pluginMessageSender;
+        this.networkNotifier = networkNotifier;
+        this.eventListener = eventListener;
+        permissionsResolver = new PermissionsResolver();
+        cleanupTask = new CleanupTask();
+    }
+
+    public void load()
+    {
         Lang.load(plugin.getPluginFolderPath() + "/lang/" + Statics.localeString(config.getLocale()) + ".yml");
         permissionsResolver.setUseRegex(config.isUseRegexPerms());
     }
