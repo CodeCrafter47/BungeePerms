@@ -18,10 +18,13 @@ import org.junit.Test;
 public class PermissionsResolverTest
 {
     PermissionsResolver resolver;
+    PermissionsResolver regexResolver;
     public PermissionsResolverTest()
     {
         resolver=new PermissionsResolver();
         resolver.setUseRegex(false);
+        regexResolver=new PermissionsResolver();
+        regexResolver.setUseRegex(true);
     }
 
     @Test
@@ -180,241 +183,552 @@ public class PermissionsResolverTest
     @Test
     public void testHasRegex1()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("test.test1.(test2|test3)");
         
-        assertTrue(resolver.has(perms, perm));
+        assertTrue(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex2()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("test.test1.(test)2|3");
         
-        assertTrue(resolver.has(perms, perm));
+        assertTrue(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex3()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("test.test1.(test1|test3)");
         
-        assertNull(resolver.has(perms, perm));
+        assertNull(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex4()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("test.test1.(test1|*)");
         
-        assertTrue(resolver.has(perms, perm));
+        assertTrue(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex5()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("-test.test1.(test1|test3|*)");
         
-        assertFalse(resolver.has(perms, perm));
+        assertFalse(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex6()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("-test.#####.test2");
         
-        assertFalse(resolver.has(perms, perm));
+        assertFalse(regexResolver.has(perms, perm));
     }
     @Test
     public void testHasRegex7()
     {
-        if(!resolver.isUseRegex()){return;}
-        
         String perm="test.test1.test2";
         List<String> perms=new ArrayList<>();
         perms.add("-test.####.test2");
         
-        assertNull(resolver.has(perms, perm));
+        assertNull(regexResolver.has(perms, perm));
     }
 
-    
-    
-    
-    
-//    @Test
-//    public void testSimplify1()
-//    {
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.size()==1);
-//    }
-//    @Test
-//    public void testSimplify2()
-//    {
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.test3");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.size()==2);
-//    }
-//    
-//    @Test
-//    public void testSimplify4()
-//    {
-//        List<String> perms=new ArrayList<>();
-////        perms.add("-test.test1.test2");
-////        perms.add("test.test1.*");
-////        perms.add("-test.test1.test2");
-//        
-//        
-//        perms.add("-multiverse.access.vipfarm");
-//        perms.add("multiverse.access.*");
-//        perms.add("multiverse.access.*");
-//        perms.add("-multiverse.access.vipfarm");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        System.out.println(s);
-//        assertTrue(s.size()==2);
-//    }
-    
-//    @Test
-//    public void testSimplify3()
-//    {
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.test3");
-//        
-//        
-//        perms.add("-chatty.join.el");
-//        perms.add("-chatty.join.mb");
-//        perms.add("chatty.join");
-//        perms.add("chatty.join.*");
-//        perms.add("-chatty.join.mb");
-//        perms.add("-chatty.join.el");
-//        perms.add("-chatty.join.mb");
-//        perms.add("-chatty.join.el");
-//        perms.add("-chatty.join.mb");
-//        perms.add("chatty.join");
-//        perms.add("chatty.join.*");
-//        perms.add("-chatty.join.mb");
-//        perms.add("-chatty.join.el");
-//
-//        
-//        List<String> s=resolver.simplify(perms);
-//        System.out.println(s);
-//        System.out.println(resolver.has(perms, "chatty.join.mb"));
-//        assertTrue(s.size()==2);
-//    }
-//    @Test
-//    public void testSimplifyRegex1()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
+    @Test
+    public void testSimplify1()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+
+        List<String> s=resolver.simplify(perms);
+        assertTrue(s.size() == 1);
+    }
+    @Test
+    public void testSimplify2()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.test3");
+
+        List<String> s=resolver.simplify(perms);
+        assertTrue(s.size()==2);
+    }
+
+    @Test
+    public void testSimplify4()
+    {
+        List<String> perms=new ArrayList<>();
+//        perms.add("-test.test1.test2");
 //        perms.add("test.test1.*");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.size()==1);
-//        assertTrue(s.get(0).equalsIgnoreCase("test.test1.*"));
-//    }
-//    @Test
-//    public void testSimplifyRegex2()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.*");
-//        perms.add("-test.test1.*");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.isEmpty());
-//    }
-//    @Test
-//    public void testSimplifyRegex3()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.*");
-//        perms.add("-test.*");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.isEmpty());
-//    }
-//    @Test
-//    public void testSimplifyRegex4()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("-test.*.test2");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.isEmpty());
-//    }
-//    @Test
-//    public void testSimplifyRegex5()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("-test.*.*");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.isEmpty());
-//    }
-//    @Test
-//    public void testSimplifyRegex6()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.test(2|3|4)");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.size()==1);
-//        assertTrue(s.get(0).equalsIgnoreCase("test.test1.test(2|3|4)"));
-//    }
-//    @Test
-//    public void testSimplifyRegex7()
-//    {
-//        if(!resolver.isUseRegex()){return;}
-//        
-//        List<String> perms=new ArrayList<>();
-//        perms.add("test.test1.test2");
-//        perms.add("test.test1.test(2|3|4)");
-//        perms.add("test.test1.test#");
-//        
-//        List<String> s=resolver.simplify(perms);
-//        assertTrue(s.size()==2);
-//        assertTrue(s.get(0).equalsIgnoreCase("test.test1.test(2|3|4)"));
-//        assertTrue(s.get(1).equalsIgnoreCase("test.test1.test#"));
-//    }
+//        perms.add("-test.test1.test2");
+
+
+        perms.add("-multiverse.access.vipfarm");
+        perms.add("multiverse.access.*");
+        perms.add("multiverse.access.*");
+        perms.add("-multiverse.access.vipfarm");
+
+        List<String> s=resolver.simplify(perms);
+        assertTrue(s.size()==2);
+    }
+    
+    @Test
+    public void testSimplify3()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.test3");
+
+
+        perms.add("-chatty.join.el");
+        perms.add("-chatty.join.mb");
+        perms.add("chatty.join");
+        perms.add("chatty.join.*");
+        perms.add("-chatty.join.mb");
+        perms.add("-chatty.join.el");
+        perms.add("-chatty.join.mb");
+        perms.add("-chatty.join.el");
+        perms.add("-chatty.join.mb");
+        perms.add("chatty.join");
+        perms.add("chatty.join.*");
+        perms.add("-chatty.join.mb");
+        perms.add("-chatty.join.el");
+
+
+        List<String> s=resolver.simplify(perms);
+        assertTrue(s.size()==5);
+    }
+    @Test
+    public void testSimplifyRegex1()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.*");
+
+        List<String> s=regexResolver.simplify(perms);
+        assertTrue(s.size()==1);
+        assertTrue(s.get(0).equalsIgnoreCase("test.test1.*"));
+    }
+    @Test
+    public void testSimplifyRegex2()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.*");
+        perms.add("-test.test1.*");
+
+        List<String> s=regexResolver.simplify(perms);
+        //assertTrue(s.size() == 1);
+        assertFalse(regexResolver.has(s, "test.test1.test2"));
+        assertFalse(regexResolver.has(s, "test.test1.test5"));
+    }
+    @Test
+    public void testSimplifyRegex3()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.*");
+        perms.add("-test.*");
+
+        List<String> s=regexResolver.simplify(perms);
+        //assertTrue(s.size() == 1);
+        assertFalse(regexResolver.has(s, "test.test1.test2"));
+    }
+    @Test
+    public void testSimplifyRegex4()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*.test2");
+
+        List<String> s=regexResolver.simplify(perms);
+        assertTrue(s.size() == 1);
+        assertFalse(regexResolver.has(s, "test.test1.test2"));
+        assertFalse(regexResolver.has(s, "test.abc.test2"));
+        assertNull(regexResolver.has(s, "test.test1.test3"));
+    }
+    @Test
+    public void testSimplifyRegex5()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*.*");
+
+        List<String> s=regexResolver.simplify(perms);
+        assertTrue(s.size() == 1);
+        assertFalse(regexResolver.has(s, "test.test1.test2"));
+        assertFalse(regexResolver.has(s, "test.abc.test2"));
+        assertFalse(regexResolver.has(s, "test.test1.test3"));
+    }
+    @Test
+    public void testSimplifyRegex6()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.test(2|3|4)");
+
+        List<String> s=regexResolver.simplify(perms);
+        assertTrue(s.size()==1);
+        assertTrue(s.get(0).equalsIgnoreCase("test.test1.test(2|3|4)"));
+    }
+    @Test
+    public void testSimplifyRegex7()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("test.test1.test(2|3|4)");
+        perms.add("test.test1.test#");
+
+        List<String> s=regexResolver.simplify(perms);
+        assertTrue(s.size()==2);
+        assertTrue(s.get(0).equalsIgnoreCase("test.test1.test(2|3|4)"));
+        assertTrue(s.get(1).equalsIgnoreCase("test.test1.test#"));
+    }
+
+    @Test
+    public void testSimplify5()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify6()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify7()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.test1.test2");
+        perms.add("test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify8()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.test1.test2");
+        perms.add("test.test1.test2");
+        perms.add("-test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify9()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+
+        perms = resolver.simplify(perms);
+
+        assertNull(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify10()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.test1.*");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify11()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify12()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify13()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.test1.*");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify14()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.*");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify15()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.*");
+        perms.add("-test.test1.test2");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify16()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.*");
+        perms.add("-test.test1.*");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify17()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.*");
+        perms.add("-test.test1.*");
+        perms.add("*");
+
+        perms = resolver.simplify(perms);
+
+        assertTrue(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify18()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.*");
+        perms.add("-*");
+
+        perms = resolver.simplify(perms);
+
+        assertFalse(resolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplify19()
+    {
+        List<String> perms=new ArrayList<>();
+        perms.add("test.*");
+        perms.add("test.test1");
+
+        perms = resolver.simplify(perms);
+
+        assertEquals(1, perms.size());
+    }
+
+    @Test
+    public void testSimplifyRegex8()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.(test2|test3)");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex9()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.(test)2|3");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex10()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.(test1|test3)");
+
+        perms = regexResolver.simplify(perms);
+
+        assertNull(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex11()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.(test1|*)");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex12()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("-test.test1.(test1|test3|*)");
+
+        perms = regexResolver.simplify(perms);
+
+        assertFalse(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex13()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("-test.#####.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertFalse(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex14()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("-test.####.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertNull(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex15()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.#####.test2");
+        perms.add("test.test1.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex16()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*.test2");
+        perms.add("test.test1.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex17()
+    {
+        String perm="test.test1.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test1.test2");
+        perms.add("-test.*");
+        perms.add("test.test1.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm));
+    }
+    @Test
+    public void testSimplifyRegex18()
+    {
+        String perm1="test.test1.test2";
+        String perm2="test.test12345.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test(1|2).test2");
+        perms.add("test.test#####.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm1));
+        assertTrue(regexResolver.has(perms, perm2));
+    }
+    @Test
+    public void testSimplifyRegex19()
+    {
+        String perm1="test.test1.test2";
+        String perm2="test.test12345.test2";
+        List<String> perms=new ArrayList<>();
+        perms.add("test.test*.test2");
+        perms.add("test.test#.test2");
+
+        perms = regexResolver.simplify(perms);
+
+        assertTrue(regexResolver.has(perms, perm1));
+        assertTrue(regexResolver.has(perms, perm2));
+    }
 }
