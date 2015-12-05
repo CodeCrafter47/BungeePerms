@@ -1,17 +1,14 @@
 package net.alpenblock.bungeeperms.platform.bukkit;
 
-import java.util.ArrayList;
 import net.alpenblock.bungeeperms.BungeePerms;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 import lombok.Getter;
 import net.alpenblock.bungeeperms.Group;
 import net.alpenblock.bungeeperms.Lang;
 import net.alpenblock.bungeeperms.PermissionsManager;
-import net.alpenblock.bungeeperms.Server;
 import net.alpenblock.bungeeperms.Statics;
 import net.alpenblock.bungeeperms.User;
 import net.alpenblock.bungeeperms.platform.EventListener;
@@ -24,6 +21,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
 public class BukkitEventListener implements Listener, EventListener, PluginMessageListener
@@ -52,7 +50,7 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         Bukkit.getPluginManager().registerEvents(this, BukkitPlugin.getInstance());
 
         //inject into console // seems to be best place here
-        Permissible permissible = new Permissible(Bukkit.getConsoleSender());
+        Permissible permissible = new Permissible(Bukkit.getConsoleSender(), null);
         org.bukkit.permissions.Permissible oldpermissible = Injector.inject(Bukkit.getConsoleSender(), permissible);
         permissible.setOldPermissible(oldpermissible);
     }
@@ -76,12 +74,12 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
     {
         String playername = e.getPlayer().getName();
         UUID uuid = null;
-        
+
         if (config.isUseUUIDs())
         {
             BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN_UUID, e.getPlayer().getName(), e.getPlayer().getUniqueId()));
             uuid = e.getPlayer().getUniqueId();
-            
+
             //update uuid player db
             pm().getUUIDPlayerDB().update(uuid, playername);
         }
@@ -89,12 +87,12 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         {
             BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN, e.getPlayer().getName()));
         }
-        
+
         User u = config.isUseUUIDs() ? pm().getUser(uuid) : pm().getUser(playername);
         if (u == null)
         {
             //create user and add default groups
-            if(config.isUseUUIDs())
+            if (config.isUseUUIDs())
             {
                 BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.ADDING_DEFAULT_GROUPS_UUID, playername, uuid));
             }
@@ -108,15 +106,20 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         }
 
         //inject permissible
-        Permissible permissible = new Permissible(e.getPlayer());
+        Permissible permissible = new Permissible(e.getPlayer(), u);
         org.bukkit.permissions.Permissible oldpermissible = Injector.inject(e.getPlayer(), permissible);
         permissible.setOldPermissible(oldpermissible);
+        
+        updateAttachment(e.getPlayer(), u);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e)
     {
         BukkitPlugin.getInstance().getNotifier().sendWorldUpdate(e.getPlayer());
+        
+        User u = config.isUseUUIDs() ? pm().getUser(e.getPlayer().getUniqueId()) : pm().getUser(e.getPlayer().getName());
+        updateAttachment(e.getPlayer(), u);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -141,6 +144,9 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
     public void onChangedWorld(PlayerChangedWorldEvent e)
     {
         BukkitPlugin.getInstance().getNotifier().sendWorldUpdate(e.getPlayer());
+        
+        User u = config.isUseUUIDs() ? pm().getUser(e.getPlayer().getUniqueId()) : pm().getUser(e.getPlayer().getName());
+        updateAttachment(e.getPlayer(), u);
     }
 
     @Override
@@ -206,5 +212,19 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
     private PermissionsManager pm()
     {
         return BungeePerms.getInstance().getPermissionsManager();
+    }
+
+    private void updateAttachment(Player p, User u)
+    {
+        PermissibleBase base = Injector.getPermissible(p);
+        if (!(base instanceof Permissible))
+        {
+            return;
+        }
+        
+        Permissible perm = (Permissible) base;
+        perm.updateAttachment(u, ((BukkitConfig)BungeePerms.getInstance().getConfig()).getServername(), p.getWorld() == null ? null : p.getWorld().getName());
+        
+        p.recalculatePermissions();
     }
 }

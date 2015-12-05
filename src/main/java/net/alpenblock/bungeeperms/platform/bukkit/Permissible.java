@@ -1,27 +1,34 @@
 package net.alpenblock.bungeeperms.platform.bukkit;
 
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.alpenblock.bungeeperms.BungeePerms;
 import net.alpenblock.bungeeperms.Statics;
+import net.alpenblock.bungeeperms.User;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 
 public class Permissible extends PermissibleBase
 {
 
     private CommandSender sender;
+    private PermissionAttachment attachment;
     private Map<String, PermissionAttachmentInfo> permissions;
+    private List<PermissionAttachment> attachments;
     private org.bukkit.permissions.Permissible oldpermissible = new PermissibleBase(null);
 
-    public Permissible(CommandSender sender)
+    public Permissible(CommandSender sender, User u)
     {
         super(sender);
         this.sender = sender;
@@ -38,7 +45,6 @@ public class Permissible extends PermissibleBase
                 return super.put(k, v);
             }
         };
-
         Statics.setField(PermissibleBase.class, this, permissions, "permissions");
     }
 
@@ -50,13 +56,16 @@ public class Permissible extends PermissibleBase
     public void setOldPermissible(org.bukkit.permissions.Permissible oldPermissible)
     {
         this.oldpermissible = oldPermissible;
+        attachments = (List<PermissionAttachment>) Statics.getField(this, PermissibleBase.class, "attachments");
+        Statics.setField(PermissibleBase.class, oldpermissible, permissions, "permissions");
+        recalculatePermissions();
     }
 
     public boolean hasSuperPerm(String perm)
     {
         if (oldpermissible == null)
         {
-            return super.hasPermission(perm);
+            return false;
         }
         return oldpermissible.hasPermission(perm);
     }
@@ -65,11 +74,6 @@ public class Permissible extends PermissibleBase
     public boolean hasPermission(String permission)
     {
         boolean res = BungeePerms.getInstance().getPermissionsChecker().hasPermOrConsoleOnServerInWorld(new BukkitSender(sender), permission);
-//        if(sender instanceof ConsoleCommandSender)
-//        {
-//            System.out.println("console :D");
-//        }
-
         return res;
     }
 
@@ -84,7 +88,6 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            super.recalculatePermissions();
             return;
         }
         oldpermissible.recalculatePermissions();
@@ -93,21 +96,13 @@ public class Permissible extends PermissibleBase
     @Override
     public Set<PermissionAttachmentInfo> getEffectivePermissions()
     {
-        if (oldpermissible == null)
-        {
-            return super.getEffectivePermissions();
-        }
         return new LinkedHashSet<>(permissions.values());
     }
 
     @Override
     public boolean isOp()
     {
-        if (oldpermissible == null)
-        {
-            return super.isOp();
-        }
-        return oldpermissible.isOp();
+        return oldpermissible == null ? false : oldpermissible.isOp();
     }
 
     @Override
@@ -115,7 +110,6 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            super.setOp(value);
             return;
         }
         oldpermissible.setOp(value);
@@ -138,7 +132,7 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            return super.addAttachment(plugin);
+            return null;
         }
         return oldpermissible.addAttachment(plugin);
     }
@@ -148,7 +142,7 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            return super.addAttachment(plugin, ticks);
+            return null;
         }
         return oldpermissible.addAttachment(plugin, ticks);
     }
@@ -158,7 +152,7 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            return super.addAttachment(plugin, name, value);
+            return null;
         }
         return oldpermissible.addAttachment(plugin, name, value);
     }
@@ -168,7 +162,7 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            return super.addAttachment(plugin, name, value, ticks);
+            return null;
         }
         return oldpermissible.addAttachment(plugin, name, value, ticks);
     }
@@ -178,7 +172,6 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            super.removeAttachment(attachment);
             return;
         }
         oldpermissible.removeAttachment(attachment);
@@ -189,7 +182,6 @@ public class Permissible extends PermissibleBase
     {
         if (oldpermissible == null)
         {
-            super.clearPermissions();
             return;
         }
         if (oldpermissible instanceof PermissibleBase)
@@ -197,5 +189,71 @@ public class Permissible extends PermissibleBase
             PermissibleBase base = (PermissibleBase) oldpermissible;
             base.clearPermissions();
         }
+    }
+
+    public void updateAttachment(User u, String server, String world)
+    {
+        //create attachment if no existing
+        if (attachment == null)
+        {
+            attachment = sender.addAttachment(BukkitPlugin.getInstance());
+            attachment.setPermission(getUserNodeName(u), true);
+        }
+
+        Permission perm = getUserNode(u);
+
+        //add perms
+        perm.getChildren().clear();
+        for (String p : u.getEffectivePerms(server, world))
+        {
+            if (p.startsWith("-"))
+            {
+                perm.getChildren().put(p.substring(1), false);
+            }
+            else
+            {
+                perm.getChildren().put(p, true);
+            }
+        }
+        recalculatePermissions();
+    }
+
+    public void removeAttachment()
+    {
+        if (attachment != null)
+        {
+            removeAttachment(attachment);
+            attachment.remove();
+        }
+    }
+
+    private Permission getUserNode(User u)
+    {
+        String permname = getUserNodeName(u);
+        Permission perm = Bukkit.getPluginManager().getPermission(permname);
+        if (perm == null)
+        {
+            perm = new Permission(permname, "Internal permission for BungeePerms. DO NOT SET DIRECTLY", PermissionDefault.FALSE)
+            {
+                @Override
+                public void recalculatePermissibles()
+                {
+                    // nothing to do here
+                }
+            };
+            Bukkit.getPluginManager().addPermission(perm);
+        }
+
+        return perm;
+    }
+
+    private String getUserNodeName(User u)
+    {
+        if (sender instanceof ConsoleCommandSender)
+        {
+            return "bungeeperms.console";
+        }
+        String id = BungeePerms.getInstance().getConfig().isUseUUIDs() ? u.getUUID().toString() : u.getName();
+        return "bungeeperms.user." + id;
     }
 }
