@@ -99,7 +99,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setPlayerPrefix(String world, String player, String prefix)
     {
-        prefix = prefix.replaceAll("&", "ง");
+        prefix = prefix.replaceAll("&", "ยง");
 
         User u = perms.getPermissionsManager().getUser(player);
         if (u == null)
@@ -127,7 +127,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setPlayerSuffix(String world, String player, String suffix)
     {
-        suffix = suffix.replaceAll("&", "ง");
+        suffix = suffix.replaceAll("&", "ยง");
 
         User u = perms.getPermissionsManager().getUser(player);
         if (u == null)
@@ -156,7 +156,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setGroupPrefix(String world, String group, String prefix)
     {
-        prefix = prefix.replaceAll("&", "ง");
+        prefix = prefix.replaceAll("&", "ยง");
 
         Group g = perms.getPermissionsManager().getGroup(group);
         if (g == null)
@@ -185,7 +185,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setGroupSuffix(String world, String group, String suffix)
     {
-        suffix = suffix.replaceAll("&", "ง");
+        suffix = suffix.replaceAll("&", "ยง");
 
         Group g = perms.getPermissionsManager().getGroup(group);
         if (g == null)

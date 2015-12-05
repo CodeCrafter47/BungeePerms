@@ -712,9 +712,9 @@ public class User
 
         for (String p : prefixes)
         {
-            if (!ChatColor.strip(p.replaceAll("&", "ง")).isEmpty()
+            if (!ChatColor.strip(p.replaceAll("&", "ยง")).isEmpty()
                     && !prefix.isEmpty()
-                    && !ChatColor.strip(prefix.replaceAll("&", "ง")).endsWith(" "))
+                    && !ChatColor.strip(prefix.replaceAll("&", "ยง")).endsWith(" "))
             {
                 prefix += " ";
             }
@@ -791,9 +791,9 @@ public class User
 
         for (String suf : suffixes)
         {
-            if (!ChatColor.strip(suf.replaceAll("&", "ง")).isEmpty()
+            if (!ChatColor.strip(suf.replaceAll("&", "ยง")).isEmpty()
                     && !suffix.isEmpty()
-                    && !ChatColor.strip(suffix.replaceAll("&", "ง")).endsWith(" "))
+                    && !ChatColor.strip(suffix.replaceAll("&", "ยง")).endsWith(" "))
             {
                 suffix += " ";
             }

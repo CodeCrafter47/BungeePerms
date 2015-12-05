@@ -30,7 +30,7 @@ public class Lang
             s = type.getDefaultValue();
         }
         s = Statics.format(s, vars);
-        return s.replaceAll("&", "ง");
+        return s.replaceAll("&", "ยง");
     }
 
     @AllArgsConstructor

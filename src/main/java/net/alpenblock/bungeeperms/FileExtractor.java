@@ -39,7 +39,7 @@ public class FileExtractor
         f.getParentFile().mkdirs();
         try
         {
-            //file öffnen
+            //file Ã–ffnen
             ClassLoader cl = FileExtractor.class.getClassLoader();
             URL url = cl.getResource(file);
             if (url != null)
