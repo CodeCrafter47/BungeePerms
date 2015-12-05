@@ -1,5 +1,8 @@
 package net.alpenblock.bungeeperms;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 import java.util.logging.Logger;
 import lombok.Getter;
 import net.alpenblock.bungeeperms.platform.EventListener;
@@ -62,6 +65,35 @@ public class BungeePerms
     
     public void load()
     {
+        // Print warning
+        logger.warning("You are using an unofficial build of BungeePerms.");
+        logger.warning("This build contains several experimental patches by CodeCrafter47 which have been proposed for inclusion into BungeePerms.");
+        logger.warning("Report any bugs at https://github.com/CodeCrafter47/BungeePerms/issues/new");
+        logger.warning("You are using an unofficial build of BungeePerms.");
+
+        // Check whether there is a new build available
+        try
+        {
+            logger.info("Checking for updates...");
+            Properties current = new Properties();
+            current.load(getClass().getClassLoader().getResourceAsStream("version.properties"));
+            String currentVersion = current.getProperty("build", "unknown");
+            if (!currentVersion.equals("unknown"))
+            {
+                int buildNumber = Integer.valueOf(currentVersion);
+                Properties latest = new Properties();
+                latest.load(new URL("http://ci.codecrafter47.dyndns.eu/job/BungeePerms/lastSuccessfulBuild/artifact/target/classes/version.properties").openStream());
+                String latestVersion = latest.getProperty("build", "unknown");
+                int latestBuildNumber = Integer.valueOf(latestVersion);
+                if (latestBuildNumber > buildNumber)
+                {
+                    logger.info("There is a new version available at http://ci.codecrafter47.dyndns.eu/job/BungeePerms/");
+                }
+            }
+        } catch (IOException ex) {
+            logger.warning("Failed to check whether this version is up-to-date");
+        }
+
         Lang.load(plugin.getPluginFolderPath() + "/lang/" + Statics.localeString(config.getLocale()) + ".yml");
         permissionsResolver.setUseRegex(config.isUseRegexPerms());
     }
