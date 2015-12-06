@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import lombok.Getter;
+import net.alpenblock.bungeeperms.platform.EventDispatcher;
 import net.alpenblock.bungeeperms.platform.EventListener;
 import net.alpenblock.bungeeperms.platform.NetworkNotifier;
 import net.alpenblock.bungeeperms.platform.PlatformPlugin;
@@ -32,13 +33,15 @@ public class BungeePerms
     private final PluginMessageSender pluginMessageSender;
     private final NetworkNotifier networkNotifier;
     private final EventListener eventListener;
+    private final EventDispatcher eventDispatcher;
     private final PermissionsResolver permissionsResolver;
     private final CleanupTask cleanupTask;
     private int cleanupTaskId = -1;
 
     private boolean enabled;
 
-    public BungeePerms(PlatformPlugin plugin, BPConfig config, PluginMessageSender pluginMessageSender, NetworkNotifier networkNotifier, EventListener eventListener)
+    public BungeePerms(PlatformPlugin plugin, BPConfig config, PluginMessageSender pluginMessageSender,
+            NetworkNotifier networkNotifier, EventListener eventListener, EventDispatcher eventDispatcher)
     {
         //static
         instance = this;
@@ -95,6 +98,7 @@ public class BungeePerms
         this.pluginMessageSender = pluginMessageSender;
         this.networkNotifier = networkNotifier;
         this.eventListener = eventListener;
+        this.eventDispatcher = eventDispatcher;
         permissionsResolver = new PermissionsResolver();
         cleanupTask = new CleanupTask();
     }
