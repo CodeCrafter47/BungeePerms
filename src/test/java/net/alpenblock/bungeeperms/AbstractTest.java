@@ -28,7 +28,7 @@ public class AbstractTest
         bpConfig = new BPConfig(config);
         bpConfig.load();
         networkNotifier = new MockNetworkNotifier();
-        bungeePerms = new BungeePerms(platform, bpConfig, null, networkNotifier, new MockEventListener());
+        bungeePerms = new BungeePerms(platform, bpConfig, null, networkNotifier, new MockEventListener(), new MockEventDispatcher());
         bungeePerms.load();
         bungeePerms.enable();
         pm = BungeePerms.getInstance().getPermissionsManager();
@@ -312,6 +312,27 @@ public class AbstractTest
 
         @Override
         public void reloadAll(String origin)
+        {
+
+        }
+    }
+
+    protected class MockEventDispatcher implements EventDispatcher {
+
+        @Override
+        public void dispatchReloadedEvent()
+        {
+
+        }
+
+        @Override
+        public void dispatchGroupChangeEvent(Group g)
+        {
+
+        }
+
+        @Override
+        public void dispatchUserChangeEvent(User u)
         {
 
         }
