@@ -112,7 +112,7 @@ public class User implements PermEntity
 
         perm = Statics.toLower(perm);
 
-        //ops have every permission so *
+        //ops have every permission so * //todo
         if (s != null && s.isOperator())
         {
             //debug mode
@@ -526,19 +526,25 @@ public class User implements PermEntity
         }
         for (Server s : servers.values())
         {
-            if (!s.getPerms().isEmpty() || !s.getDisplay().isEmpty() || !s.getPrefix().isEmpty() || !s.getSuffix().isEmpty())
+            if (!s.getPerms().isEmpty() 
+                    || !Statics.isEmpty(s.getDisplay())
+                    || !Statics.isEmpty(s.getPrefix())
+                    || !Statics.isEmpty(s.getSuffix()))
             {
                 return false;
             }
             for (World w : s.getWorlds().values())
             {
-                if (!s.getPerms().isEmpty() || !w.getDisplay().isEmpty() || !w.getPrefix().isEmpty() || !w.getSuffix().isEmpty())
+                if (!s.getPerms().isEmpty() 
+                        || !Statics.isEmpty(w.getDisplay())
+                        || !Statics.isEmpty(w.getPrefix())
+                        || !Statics.isEmpty(w.getSuffix()))
                 {
                     return false;
                 }
             }
         }
-        return perms.isEmpty() && display.isEmpty() && prefix.isEmpty() && suffix.isEmpty();
+        return perms.isEmpty() && Statics.isEmpty(display) && Statics.isEmpty(prefix) && Statics.isEmpty(suffix);
     }
 
     public Group getGroupByLadder(String ladder)
