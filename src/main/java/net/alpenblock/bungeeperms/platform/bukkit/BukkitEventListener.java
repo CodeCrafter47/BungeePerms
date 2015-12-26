@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
-import org.bukkit.permissions.PermissibleBase;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
 public class BukkitEventListener implements Listener, EventListener, PluginMessageListener
@@ -52,9 +52,8 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         Bukkit.getPluginManager().registerEvents(this, BukkitPlugin.getInstance());
 
         //inject into console // seems to be best place here
-        Permissible permissible = new Permissible(Bukkit.getConsoleSender(), null);
-        org.bukkit.permissions.Permissible oldpermissible = Injector.inject(Bukkit.getConsoleSender(), permissible);
-        permissible.setOldPermissible(oldpermissible);
+        BPPermissible permissible = new BPPermissible(Bukkit.getConsoleSender(), null, Injector.getPermissible(Bukkit.getConsoleSender()));
+        permissible.inject();
     }
 
     @Override
@@ -110,9 +109,8 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         BukkitPlugin.getInstance().getNotifier().sendWorldUpdate(e.getPlayer());
 
         //inject permissible
-        Permissible permissible = new Permissible(e.getPlayer(), u);
-        org.bukkit.permissions.Permissible oldpermissible = Injector.inject(e.getPlayer(), permissible);
-        permissible.setOldPermissible(oldpermissible);
+        BPPermissible permissible = new BPPermissible(e.getPlayer(), u, Injector.getPermissible(e.getPlayer()));
+        permissible.inject();
 
         updateAttachment(e.getPlayer(), u);
     }
@@ -242,15 +240,13 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
 
     private void updateAttachment(Player p, User u)
     {
-        PermissibleBase base = Injector.getPermissible(p);
-        if (!(base instanceof Permissible))
+        Permissible base = Injector.getPermissible(p);
+        if (!(base instanceof BPPermissible))
         {
             return;
         }
 
-        Permissible perm = (Permissible) base;
+        BPPermissible perm = (BPPermissible) base;
         perm.updateAttachment(u, ((BukkitConfig) BungeePerms.getInstance().getConfig()).getServername(), p.getWorld() == null ? null : p.getWorld().getName());
-
-        p.recalculatePermissions();
     }
 }

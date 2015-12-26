@@ -232,11 +232,6 @@ public class Statics
         return s == null ? null : s.toLowerCase();
     }
 
-    public static boolean isBungeeConsole(Object o)
-    {
-        return o.getClass().getName().equals("net.md_5.bungee.command.ConsoleCommandSender");
-    }
-
     @SneakyThrows
     public static void unregisterListener(Listener l)
     {
@@ -274,5 +269,18 @@ public class Statics
     public static String formatDisplay(String append)
     {
         return isEmpty(append) ? "" : append + " ";
+    }
+    
+    public static boolean isInt(String s)
+    {
+        try
+        {
+            Integer.parseInt(s);
+            return true;
+        }
+        catch(Exception e)
+        {
+            return false;
+        }
     }
 }

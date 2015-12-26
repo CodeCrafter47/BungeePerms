@@ -1,4 +1,4 @@
-bungeeperms: '&6Willkommen zu BungeePerms, einem BungeeCord-Permission Plugin'
+bungeeperms: '&6Willkommen zu BungeePerms, einem BungeeCord/Spigot-Permission Plugin'
 version: '&7Version &6{0}'
 author: '&7Autor &6{0}'
 permissions-reloaded: '&7Rechte neu geladen'
@@ -13,9 +13,10 @@ formatting: '&7Formatiere Permission-Datei/Tabelle ...'
 formatting-done: '&2Formatierung abgeschlossen.'
 cleaning: '&7Bereinige Permission-Datei/Tabelle ...'
 cleaning-done: '&2Bereinigung abgeschlossen. &6{0} &2User geloescht.'
+no-permission: '&cDu hast keine Rechte um das zu tun!'
 error:
   invalid-bool-value: '&4Eine boolscher Wert ist erforderlich!'
-  invalid-int-value: '&4Ein Integer-Wert groeßer 0 ist erforderlich!'
+  invalid-int-value: '&4Ein Integer-Wert groesser 0 ist erforderlich!'
   user:
     not-existing: '&4Der Spieler &3{0}&4 existiert nicht!'
     already-in-group: '&4Der Spieler ist bereits in der Gruppe &6{0}&4!'
@@ -130,6 +131,7 @@ common:
   prefix: '&7Prefix: &r{0}'
   suffix: '&7Suffix: &r{0}'
   permissions-list-item: '&7- &6{0}&7 (&6{1}&7{2}{3})'
+  permissions-list-header-page: '&7Seite &6{0}&7/&6{1}&7'
 general:
   own: eigene
   none: keine
