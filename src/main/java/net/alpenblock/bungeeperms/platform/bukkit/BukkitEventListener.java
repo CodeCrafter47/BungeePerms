@@ -54,6 +54,18 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         //inject into console // seems to be best place here
         BPPermissible permissible = new BPPermissible(Bukkit.getConsoleSender(), null, Injector.getPermissible(Bukkit.getConsoleSender()));
         permissible.inject();
+        
+        //uninject from players
+        for(Player p : Bukkit.getOnlinePlayers())
+        {
+            if(!(Injector.getPermissible(p) instanceof BPPermissible))
+            {
+                User u = config.isUseUUIDs() ? pm().getUser(p.getUniqueId()) : pm().getUser(p.getName());
+                BPPermissible perm = new BPPermissible(p, u, Injector.getPermissible(p));
+                perm.inject();
+            }
+            p.recalculatePermissions();
+        }
     }
 
     @Override
@@ -68,6 +80,12 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
 
         //uninject from console // seems to be best place here
         Injector.uninject(Bukkit.getConsoleSender());
+        
+        //uninject from players
+        for(Player p : Bukkit.getOnlinePlayers())
+        {
+            Injector.uninject(p);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -78,8 +96,8 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
 
         if (config.isUseUUIDs())
         {
-            BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN_UUID, e.getPlayer().getName(), e.getPlayer().getUniqueId()));
             uuid = e.getPlayer().getUniqueId();
+            BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN_UUID, playername, uuid));
 
             //update uuid player db
             pm().getUUIDPlayerDB().update(uuid, playername);
@@ -130,19 +148,11 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         //uninject permissible
         Injector.uninject(e.getPlayer());
 
-        User u;
-        if (config.isUseUUIDs())
-        {
-            u = pm().getUser(e.getPlayer().getUniqueId());
-        }
-        else
-        {
-            u = pm().getUser(e.getPlayer().getName());
-        }
+        User u = config.isUseUUIDs() ? pm().getUser(e.getPlayer().getUniqueId()) : pm().getUser(e.getPlayer().getName());
         pm().removeUserFromCache(u);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onChangedWorld(PlayerChangedWorldEvent e)
     {
         BukkitPlugin.getInstance().getNotifier().sendWorldUpdate(e.getPlayer());
@@ -151,7 +161,7 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         updateAttachment(e.getPlayer(), u);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onUserUpdate(BungeePermsUserChangedEvent e)
     {
         Player p = config.isUseUUIDs() ? Bukkit.getPlayer(e.getUser().getUUID()) : Bukkit.getPlayer(e.getUser().getName());
@@ -162,14 +172,14 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         updateAttachment(p, e.getUser());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPluginChannelRegister(PlayerRegisterChannelEvent e)
     {
         if (!e.getChannel().equals(BungeePerms.CHANNEL))
         {
             return;
         }
-        
+
         BukkitPlugin.getInstance().getNotifier().sendWorldUpdate(e.getPlayer());
     }
 
