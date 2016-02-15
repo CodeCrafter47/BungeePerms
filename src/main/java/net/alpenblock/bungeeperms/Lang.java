@@ -8,29 +8,29 @@ import lombok.Getter;
 public class Lang
 {
 
-    private static final Map<MessageType, String> map = new EnumMap<>(MessageType.class);
+    private static final Map<MessageType, String> MAP = new EnumMap<>(MessageType.class);
 
     public static void load(String file)
     {
         Config langconf = new Config(file);
         langconf.load();
 
-        map.clear();
+        MAP.clear();
         for (MessageType mt : MessageType.values())
         {
-            map.put(mt, langconf.getString(mt.getConfigKey(), mt.getDefaultValue()));
+            MAP.put(mt, langconf.getString(mt.getConfigKey(), mt.getDefaultValue()));
         }
     }
 
     public static String translate(MessageType type, Object... vars)
     {
-        String s = map.get(type);
+        String s = MAP.get(type);
         if (s == null)
         {
             s = type.getDefaultValue();
         }
         s = Statics.format(s, vars);
-        return s.replaceAll("&", "§");
+        return s.replaceAll("&", ChatColor.COLOR_CHAR + "");
     }
 
     @AllArgsConstructor
@@ -70,7 +70,7 @@ public class Lang
         ERR_GROUP_ALREADY_INHERITS("error.group.already-inherits", Color.Error.alt() + "The group " + Color.Value.alt() + "{0}" + Color.Text.alt() + " already inherits from " + Color.Value.alt() + "{1}" + Color.Error.alt() + "!"),
         ERR_GROUP_DOES_NOT_INHERITS("error.group.does-not-inherit", Color.Error.alt() + "The group " + Color.Value.alt() + "{0}" + Color.Error.alt() + " does not inherit from group " + Color.Value.alt() + "{1}" + Color.Error.alt() + "!"),
         //user msgs
-        NO_USERS_FOUND("user.nu-users-found", Color.Text.alt() + "No players found!"),
+        NO_USERS_FOUND("user.no-users-found", Color.Text.alt() + "No players found!"),
         REGISTERED_USERS("user.registered-users", Color.Text.alt() + "Following players are registered: "),
         REGISTERED_USERS_COUNT("user.registered-users-count", Color.Text.alt() + "There are " + Color.Value.alt() + "{0}" + Color.Text.alt() + " players registered."),
         USER_PERMISSIONS_LIST_HEADER("user.permissions-list-header", Color.Text.alt() + "Permissions of the player " + Color.User.alt() + "{0}" + Color.Text.alt() + ":"),
@@ -148,6 +148,8 @@ public class Lang
         DISPLAY("common.display", Color.Text.alt() + "Display: " + ChatColor.RESET.alt() + "{0}"),
         PREFIX("common.prefix", Color.Text.alt() + "Prefix: " + ChatColor.RESET.alt() + "{0}"),
         SUFFIX("common.suffix", Color.Text.alt() + "Suffix: " + ChatColor.RESET.alt() + "{0}"),
+        PREFIX_FULL("common.prefix-full", Color.Text.alt() + "Full prefix: " + ChatColor.RESET.alt() + "{0}"),
+        SUFFIX_FULL("common.suffix-full", Color.Text.alt() + "Full suffix: " + ChatColor.RESET.alt() + "{0}"),
         PERMISSIONS_LIST_ITEM("common.permissions-list-item", Color.Text.alt() + "- " + Color.Value.alt() + "{0}" + Color.Text.alt() + " (" + Color.Value.alt() + "{1}" + Color.Text.alt() + "{2}{3})"),
         PERMISSIONS_LIST_HEADER_PAGE("common.permissions-list-header-page", Color.Text.alt() + "Page " + Color.Value.alt() + "{0}" + Color.Text.alt() + "/" + Color.Value.alt() + "{1}" + Color.Text.alt() + ""),
         //util & parts
@@ -155,6 +157,7 @@ public class Lang
         NONE("general.none", "none"),
         DEFAULT("general.default", "default"),
         NONDEFAULT("general.nondefault", "non-default"),
+        MISCONFIGURATION("general.misconfiguration", Color.Error.alt() + "Misconfiguration"),
         //extraction
         EXTRACTING("log.extraction.extracting", "extracting {0}"),
         EXTRACTION_FAILED("log.extraction.failed", "could not extract file {0}: {1}"),
@@ -167,7 +170,22 @@ public class Lang
         LOGIN_UUID("log.login-uuid", "Login by {0} ({1})"),
         ADDING_DEFAULT_GROUPS("log.permissions.adding-default-groups", "Adding default groups to {0}"),
         ADDING_DEFAULT_GROUPS_UUID("log.permissions.adding-default-groups-uuid", "Adding default groups to {0} ({1})"),
-        INTRUSTION_DETECTED("log.intrusion-detected", Color.Error.alt() + "Possible intrusion detected. Sender is {0}"),
+        //warnings
+        INTRUSION_DETECTED("warning.intrusion-detected", Color.Error.alt() + "Possible intrusion detected. Sender is {0}"),
+        MISCONFIG_BUNGEE_STANDALONE("warning.misconfig.bungee.standalone", "Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in standalone mode. Ignoring it ..."),
+        MISCONFIG_BUNGEE_SERVERDEPENDEND("warning.misconfig.bungee.serverdependend", "Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in serverdependend mode. Ignoring it ..."),
+        MISCONFIG_BUNGEE_SERVERDEPENDENDBLACKLIST("warning.misconfig.bungee.serverdependend-blacklist", "Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in serverdependend-blacklist mode. Ignoring it ..."),
+        MISCONFIG_BUNGEE_SERVERNAME("warning.misconfig.bungee.servername", "Server {0}: The server names of the Bungeecord config and BungeePerms config do not match."),
+        MISCONFIG_BUNGEE_BACKEND("warning.misconfig.bungee.backend", "Server {0}: The backend types of the BungeePerms configs do not match."),
+        MISCONFIG_BUNGEE_UUIDPLAYERDB("warning.misconfig.bungee.uuidplayerdb", "Server {0}: The uuidplayerdb types of the BungeePerms configs do not match."),
+        MISCONFIG_BUNGEE_USEUUID("warning.misconfig.bungee.useuuid", "Server {0}: The useuuids options of the BungeePerms configs do not match."),
+        MISCONFIG_BUKKIT_STANDALONE("warning.misconfig.bukkit.standalone", "Received a plugin message from Bungeecord but BungeePerms is in standalone mode. Ignoring it ..."),
+        MISCONFIG_BUKKIT_SERVERNAME("warning.misconfig.bukkit.servername", "The server names of the Bungeecord config and BungeePerms config do not match."),
+        MISCONFIG_BUKKIT_BACKEND("warning.misconfig.bukkit.backend", "The backend types of the BungeePerms configs do not match."),
+        MISCONFIG_BUKKIT_UUIDPLAYERDB("warning.misconfig.bukkit.uuidplayerdb", "The uuidplayerdb types of the BungeePerms configs do not match."),
+        MISCONFIG_BUKKIT_USEUUID("warning.misconfig.bukkit.useuuid", "The useuuids options of the BungeePerms configs do not match."),
+        MISCONFIG_BUNGEECORD_BUKKIT_CONFIG("warning.misconfig.bungee-bukkit-config", "UUIDs on Bungeecord and Bukkit/Spigot differ. Check your Spigot/Bukkit and Bungeecord config!"),
+        MISCONFIG_USEUUID_NONE_UUID_DB("warning.misconfig.useuuid-none-uuiddb", "The useUUIDs option is enabled but the uuidplayerdb is set to none!"),
         //help
         HELP_WELCOME("help.welcome", "Welcomes you to BungeePerms"),
         HELP_HELP("help.help", "Shows this help"),

@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import net.alpenblock.bungeeperms.Group;
 import net.alpenblock.bungeeperms.Lang;
 import net.alpenblock.bungeeperms.PermissionsManager;
 import net.alpenblock.bungeeperms.Statics;
 import net.alpenblock.bungeeperms.User;
+import net.alpenblock.bungeeperms.io.BackEndType;
+import net.alpenblock.bungeeperms.io.UUIDPlayerDBType;
 import net.alpenblock.bungeeperms.platform.EventListener;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -65,11 +68,11 @@ public class BungeeEventListener implements Listener, EventListener
     public void onLogin(LoginEvent e)
     {
         //don't load if cancelled
-        if(e.isCancelled())
+        if (e.isCancelled())
         {
             return;
         }
-        
+
         String playername = e.getConnection().getName();
         UUID uuid = null;
         if (config.isUseUUIDs())
@@ -85,6 +88,14 @@ public class BungeeEventListener implements Listener, EventListener
             BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN, playername));
         }
 
+        //remove user from cache if present
+        User oldu = config.isUseUUIDs() ? pm().getUser(uuid, false) : pm().getUser(playername, false);
+        if (oldu != null)
+        {
+            pm().removeUserFromCache(oldu);
+        }
+
+        //load user from db
         User u = config.isUseUUIDs() ? pm().getUser(uuid) : pm().getUser(playername);
         if (u == null)
         {
@@ -138,12 +149,26 @@ public class BungeeEventListener implements Listener, EventListener
             }
         }
     }
-    
+
     @EventHandler(priority = Byte.MIN_VALUE)
-    public void onServerConnected(ServerConnectedEvent e)
+    public void onServerConnected(final ServerConnectedEvent e)
     {
         //plugin messages will arrive later because plugin channels are not registered at this very moment
         playerWorlds.put(e.getPlayer().getName(), null);
+
+        //send delayed uuid message to bukkit
+        if (config.isUseUUIDs())
+        {
+            Runnable r = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    BungeePlugin.getInstance().getNotifier().sendUUIDAndPlayer(e.getPlayer().getName(), e.getPlayer().getUniqueId());
+                }
+            };
+            ProxyServer.getInstance().getScheduler().schedule(BungeePlugin.getInstance(), r, 1, TimeUnit.SECONDS);
+        }
     }
 
     @EventHandler(priority = Byte.MIN_VALUE)
@@ -157,7 +182,7 @@ public class BungeeEventListener implements Listener, EventListener
         if (!(e.getReceiver() instanceof ProxiedPlayer))
         {
             //lock out silly hackers
-            BungeePerms.getLogger().severe(Lang.translate(Lang.MessageType.INTRUSTION_DETECTED, e.getSender()));
+            BungeePerms.getLogger().severe(Lang.translate(Lang.MessageType.INTRUSION_DETECTED, e.getSender()));
             e.setCancelled(true);
             return;
         }
@@ -165,16 +190,37 @@ public class BungeeEventListener implements Listener, EventListener
         net.md_5.bungee.api.connection.Server scon = (net.md_5.bungee.api.connection.Server) e.getSender();
 
         //check network type // ignore if standalone or not registered server
-        if (config.getNetworkType() == NetworkType.Standalone
-                || (config.getNetworkType() == NetworkType.ServerDependend && !config.getNetworkServers().contains(scon.getInfo().getName())))
+        if (config.getNetworkType() == NetworkType.Standalone)
         {
-            //todo add misconfiguration message
+            BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_STANDALONE, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_STANDALONE, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log("sender = " + scon.getInfo().getName());
+            BungeePerms.getInstance().getDebug().log("msg = " + new String(e.getData()));
+            return;
+        }
+        if (config.getNetworkType() == NetworkType.ServerDependend && !config.getNetworkServers().contains(scon.getInfo().getName()))
+        {
+            BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_SERVERDEPENDEND, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_SERVERDEPENDEND, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log("sender = " + scon.getInfo().getName());
+            BungeePerms.getInstance().getDebug().log("msg = " + new String(e.getData()));
+            return;
+        }
+        if (config.getNetworkType() == NetworkType.ServerDependendBlacklist && config.getNetworkServers().contains(scon.getInfo().getName()))
+        {
+            BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_SERVERDEPENDENDBLACKLIST, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_SERVERDEPENDENDBLACKLIST, scon.getInfo().getName()));
+            BungeePerms.getInstance().getDebug().log("sender = " + scon.getInfo().getName());
+            BungeePerms.getInstance().getDebug().log("msg = " + new String(e.getData()));
             return;
         }
 
         //process message
         String msg = new String(e.getData());
-        BungeePerms.getLogger().info("msg=" + msg);
+        if (config.isDebug())
+        {
+            BungeePerms.getLogger().info("msg=" + msg);
+        }
         List<String> data = Statics.toList(msg, ";");
 
         String cmd = data.get(0);
@@ -262,6 +308,29 @@ public class BungeeEventListener implements Listener, EventListener
 
             //forward plugin message to network except to server which issued the reload
             BungeePerms.getInstance().getNetworkNotifier().reloadAll(scon.getInfo().getName());
+        }
+        else if (cmd.equalsIgnoreCase("configcheck"))
+        {
+            String servername = data.get(1);
+            BackEndType backend = BackEndType.getByName(data.get(2));
+            UUIDPlayerDBType uuidplayerdb = UUIDPlayerDBType.getByName(data.get(3));
+            boolean useuuid = Boolean.parseBoolean(data.get(4));
+            if (!scon.getInfo().getName().equals(servername))
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_SERVERNAME, scon.getInfo().getName()));
+            }
+            if (config.getBackEndType() != backend)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_BACKEND, scon.getInfo().getName()));
+            }
+            if (config.getUUIDPlayerDBType() != uuidplayerdb)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_UUIDPLAYERDB, scon.getInfo().getName()));
+            }
+            if (config.isUseUUIDs() != useuuid)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEE_USEUUID, scon.getInfo().getName()));
+            }
         }
 
         e.setCancelled(true);

@@ -2,6 +2,7 @@ package net.alpenblock.bungeeperms.platform.bukkit.bridge.bridges.vault;
 
 import java.util.logging.Logger;
 import net.alpenblock.bungeeperms.BungeePerms;
+import net.alpenblock.bungeeperms.ChatColor;
 import net.alpenblock.bungeeperms.Group;
 import net.alpenblock.bungeeperms.Server;
 import net.alpenblock.bungeeperms.User;
@@ -33,14 +34,11 @@ public class Chat_BungeePerms extends Chat
         Bukkit.getServer().getPluginManager().registerEvents(new ChatServerListener(), BukkitPlugin.getInstance());
 
         // Load Plugin in case it was loaded before
-        if (this.perms == null)
+        Plugin p = plugin.getServer().getPluginManager().getPlugin("BungeePerms");
+        if (p != null)
         {
-            Plugin p = plugin.getServer().getPluginManager().getPlugin("BungeePerms");
-            if (p != null)
-            {
-                this.perms = BungeePerms.getInstance();
-                log.info(String.format("[%s][Chat] %s hooked.", plugin.getDescription().getName(), name));
-            }
+            this.perms = BungeePerms.getInstance();
+            log.info(String.format("[%s][Chat] %s hooked.", plugin.getDescription().getName(), name));
         }
     }
 
@@ -99,7 +97,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setPlayerPrefix(String world, String player, String prefix)
     {
-        prefix = prefix.replaceAll("&", "§");
+        prefix = prefix.replaceAll("&", ChatColor.COLOR_CHAR + "");
 
         User u = perms.getPermissionsManager().getUser(player);
         if (u == null)
@@ -108,13 +106,7 @@ public class Chat_BungeePerms extends Chat
         }
 
         BukkitConfig config = (BukkitConfig) BungeePerms.getInstance().getConfig();
-        Server s = u.getServer(config.getServername());
-        if (world == null)
-        {
-            s.setPrefix(prefix);
-            return;
-        }
-        s.getWorld(world).setPrefix(prefix);
+        perms.getPermissionsManager().setUserPrefix(u, prefix, config.getServername(), world);
     }
 
     @Override
@@ -127,7 +119,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setPlayerSuffix(String world, String player, String suffix)
     {
-        suffix = suffix.replaceAll("&", "§");
+        suffix = suffix.replaceAll("&", ChatColor.COLOR_CHAR + "");
 
         User u = perms.getPermissionsManager().getUser(player);
         if (u == null)
@@ -136,13 +128,7 @@ public class Chat_BungeePerms extends Chat
         }
 
         BukkitConfig config = (BukkitConfig) BungeePerms.getInstance().getConfig();
-        Server s = u.getServer(config.getServername());
-        if (world == null)
-        {
-            s.setSuffix(suffix);
-            return;
-        }
-        s.getWorld(world).setSuffix(suffix);
+        perms.getPermissionsManager().setUserSuffix(u, suffix, config.getServername(), world);
     }
 
     @Override
@@ -156,7 +142,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setGroupPrefix(String world, String group, String prefix)
     {
-        prefix = prefix.replaceAll("&", "§");
+        prefix = prefix.replaceAll("&", ChatColor.COLOR_CHAR + "");
 
         Group g = perms.getPermissionsManager().getGroup(group);
         if (g == null)
@@ -165,13 +151,7 @@ public class Chat_BungeePerms extends Chat
         }
 
         BukkitConfig config = (BukkitConfig) BungeePerms.getInstance().getConfig();
-        Server s = g.getServer(config.getServername());
-        if (world == null)
-        {
-            s.setPrefix(prefix);
-            return;
-        }
-        s.getWorld(world).setPrefix(prefix);
+        perms.getPermissionsManager().setGroupPrefix(g, prefix, config.getServername(), world);
     }
 
     @Override
@@ -185,7 +165,7 @@ public class Chat_BungeePerms extends Chat
     @Override
     public void setGroupSuffix(String world, String group, String suffix)
     {
-        suffix = suffix.replaceAll("&", "§");
+        suffix = suffix.replaceAll("&", ChatColor.COLOR_CHAR + "");
 
         Group g = perms.getPermissionsManager().getGroup(group);
         if (g == null)
@@ -194,13 +174,7 @@ public class Chat_BungeePerms extends Chat
         }
 
         BukkitConfig config = (BukkitConfig) BungeePerms.getInstance().getConfig();
-        Server s = g.getServer(config.getServername());
-        if (world == null)
-        {
-            s.setSuffix(suffix);
-            return;
-        }
-        s.getWorld(world).setSuffix(suffix);
+        perms.getPermissionsManager().setGroupSuffix(g, suffix, config.getServername(), world);
     }
 
     @Override

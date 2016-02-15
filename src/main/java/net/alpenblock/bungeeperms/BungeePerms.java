@@ -21,7 +21,7 @@ public class BungeePerms
     @Getter
     private static BungeePerms instance;
     @Getter
-    private static Logger logger;
+    private static Logger logger = Logger.getLogger("bungeeperms");
 
     private final PlatformPlugin plugin;
     private final BPConfig config;

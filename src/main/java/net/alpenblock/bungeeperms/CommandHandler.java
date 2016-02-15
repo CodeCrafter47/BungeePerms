@@ -28,6 +28,11 @@ public class CommandHandler
             return false;
         }
 
+        if (BungeePerms.getInstance().getConfig().isDebug())
+        {
+            BungeePerms.getInstance().getPlugin().getLogger().info(sender.getName() + " issued bungeeperms command /" + cmd + " " + Statics.arrayToString(args, 0, args.length, " "));
+        }
+
         if (args.length == 0)
         {
             sender.sendMessage(Lang.translate(MessageType.BUNGEEPERMS));
@@ -254,7 +259,7 @@ public class CommandHandler
         {
             return handleUserCommandsPermRemove(sender, args);
         }
-        else if (args[2].equalsIgnoreCase("has"))
+        else if (Statics.argAlias(args[2], "has", "check"))
         {
             return handleUserCommandsHas(sender, args);
         }
@@ -322,7 +327,7 @@ public class CommandHandler
         }
 
         String player = Statics.getFullPlayerName(args[1]);
-        String server = args.length > (3 + (specialpage ? 1 : 0)) ? args[3].toLowerCase() : null;
+        String server = args.length > (3 + (specialpage ? 1 : 0)) ? args[3].toLowerCase() : null;//todo tolower with config locale
         String world = args.length > (4 + (specialpage ? 1 : 0)) ? args[4].toLowerCase() : null;
 
         User user = pm().getUser(player);
@@ -389,12 +394,15 @@ public class CommandHandler
             return true;
         }
 
-        if (!Statics.matchArgs(sender, args, 3))
+        if (!Statics.matchArgs(sender, args, 3, 5))
         {
             return true;
         }
 
         String player = Statics.getFullPlayerName(args[1]);
+        String server = args.length > 3 ? args[3].toLowerCase() : null;
+        String world = args.length > 4 ? args[4].toLowerCase() : null;
+
         User user = pm().getUser(player);
         if (user == null)
         {
@@ -414,19 +422,38 @@ public class CommandHandler
         sender.sendMessage(Lang.translate(MessageType.USER_GROUPS, groups));
 
         //user perms
-        sender.sendMessage(Lang.translate(MessageType.USER_PERMISSIONS, user.getOwnPermissionsCount()));
+        sender.sendMessage(Lang.translate(MessageType.USER_PERMISSIONS, user.getOwnPermissionsCount(server, world)));
 
         //all group perms
-        sender.sendMessage(Lang.translate(MessageType.USER_ALL_PERMISSIONS_COUNT, user.getPermissionsCount()));
+        sender.sendMessage(Lang.translate(MessageType.USER_ALL_PERMISSIONS_COUNT, user.getPermissionsCount(server, world)));
+
+        //prepare displayables
+        Permable perm = user;
+        if (server != null)
+        {
+            perm = ((User) perm).getServer(server);
+            if (world != null)
+            {
+                perm = ((Server) perm).getWorld(world);
+            }
+        }
 
         //display
-        sender.sendMessage(Lang.translate(MessageType.DISPLAY, (!Statics.isEmpty(user.getDisplay()) ? user.getDisplay() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.DISPLAY, (!Statics.isEmpty(perm.getDisplay()) ? perm.getDisplay() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
 
         //prefix
-        sender.sendMessage(Lang.translate(MessageType.PREFIX, (!Statics.isEmpty(user.getPrefix()) ? user.getPrefix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.PREFIX, (!Statics.isEmpty(perm.getPrefix()) ? perm.getPrefix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
 
         //suffix
-        sender.sendMessage(Lang.translate(MessageType.SUFFIX, (!Statics.isEmpty(user.getSuffix()) ? user.getSuffix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.SUFFIX, (!Statics.isEmpty(perm.getSuffix()) ? perm.getSuffix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+
+        //full prefix
+        String buildPrefix = user.buildPrefix(server, world);
+        sender.sendMessage(Lang.translate(MessageType.PREFIX_FULL, (!Statics.isEmpty(buildPrefix) ? buildPrefix : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+
+        //full suffix
+        String buildSuffix = user.buildSuffix(server, world);
+        sender.sendMessage(Lang.translate(MessageType.SUFFIX_FULL, (!Statics.isEmpty(buildSuffix) ? buildSuffix : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
         return true;
     }
 
@@ -647,23 +674,25 @@ public class CommandHandler
             return true;
         }
 
+        //global perm
         if (server == null)
         {
             boolean has = checker.hasPerm(player, perm.toLowerCase());
             sender.sendMessage(Lang.translate(MessageType.USER_HAS_PERM, user.getName(), perm, formatBool(has)));
         }
+        
+        //per server perm
+        else if (world == null)
+        {
+            boolean has = checker.hasPermOnServer(user.getName(), perm.toLowerCase(), server);
+            sender.sendMessage(Lang.translate(MessageType.USER_HAS_PERM_SERVER, user.getName(), perm, server, formatBool(has)));
+        }
+        
+        //per server world perm
         else
         {
-            if (world == null)
-            {
-                boolean has = checker.hasPermOnServer(user.getName(), perm.toLowerCase(), server);
-                sender.sendMessage(Lang.translate(MessageType.USER_HAS_PERM_SERVER, user.getName(), perm, server, formatBool(has)));
-            }
-            else
-            {
-                boolean has = checker.hasPermOnServerInWorld(user.getName(), perm.toLowerCase(), server, world);
-                sender.sendMessage(Lang.translate(MessageType.USER_HAS_PERM_SERVER_WORLD, user.getName(), perm, server, world, formatBool(has)));
-            }
+            boolean has = checker.hasPermOnServerInWorld(user.getName(), perm.toLowerCase(), server, world);
+            sender.sendMessage(Lang.translate(MessageType.USER_HAS_PERM_SERVER_WORLD, user.getName(), perm, server, world, formatBool(has)));
         }
         return true;
     }
@@ -1052,12 +1081,15 @@ public class CommandHandler
             return true;
         }
 
-        if (!Statics.matchArgs(sender, args, 3))
+        if (!Statics.matchArgs(sender, args, 3, 5))
         {
             return true;
         }
 
         String groupname = args[1];
+        String server = args.length > 3 ? args[3].toLowerCase() : null;
+        String world = args.length > 4 ? args[4].toLowerCase() : null;
+
         Group group = pm().getGroup(groupname);
         if (group == null)
         {
@@ -1080,10 +1112,10 @@ public class CommandHandler
         sender.sendMessage(Lang.translate(MessageType.GROUP_INHERITANCES, inheritances));
 
         //group perms
-        sender.sendMessage(Lang.translate(MessageType.GROUP_PERMISSONS, group.getOwnPermissionsCount()));
+        sender.sendMessage(Lang.translate(MessageType.GROUP_PERMISSONS, group.getOwnPermissionsCount(server, world)));
 
         //all group perms
-        sender.sendMessage(Lang.translate(MessageType.GROUP_ALL_PERMISSIONS, group.getPermissionsCount()));
+        sender.sendMessage(Lang.translate(MessageType.GROUP_ALL_PERMISSIONS, group.getPermissionsCount(server, world)));
 
         //group rank
         sender.sendMessage(Lang.translate(MessageType.GROUP_RANK, group.getRank()));
@@ -1097,14 +1129,33 @@ public class CommandHandler
         //default
         sender.sendMessage(Lang.translate(MessageType.GROUP_DEFAULT, formatBool(group.isDefault())));
 
+        //prepare displayables
+        Permable perm = group;
+        if (server != null)
+        {
+            perm = ((Group) perm).getServer(server);
+            if (world != null)
+            {
+                perm = ((Server) perm).getWorld(world);
+            }
+        }
+
         //display
-        sender.sendMessage(Lang.translate(MessageType.DISPLAY, (!Statics.isEmpty(group.getDisplay()) ? group.getDisplay() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.DISPLAY, (!Statics.isEmpty(perm.getDisplay()) ? perm.getDisplay() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
 
         //prefix
-        sender.sendMessage(Lang.translate(MessageType.PREFIX, (!Statics.isEmpty(group.getPrefix()) ? group.getPrefix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.PREFIX, (!Statics.isEmpty(perm.getPrefix()) ? perm.getPrefix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
 
         //suffix
-        sender.sendMessage(Lang.translate(MessageType.SUFFIX, (!Statics.isEmpty(group.getSuffix()) ? group.getSuffix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+        sender.sendMessage(Lang.translate(MessageType.SUFFIX, (!Statics.isEmpty(perm.getSuffix()) ? perm.getSuffix() : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+
+        //full prefix
+        String buildPrefix = group.buildPrefix(server, world);
+        sender.sendMessage(Lang.translate(MessageType.PREFIX_FULL, (!Statics.isEmpty(buildPrefix) ? buildPrefix : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
+
+        //full suffix
+        String buildSuffix = group.buildSuffix(server, world);
+        sender.sendMessage(Lang.translate(MessageType.SUFFIX_FULL, (!Statics.isEmpty(buildSuffix) ? buildSuffix : Color.Text + "(" + Lang.translate(MessageType.NONE) + ")")));
         return true;
     }
 
@@ -1413,21 +1464,19 @@ public class CommandHandler
             boolean has = group.has(perm.toLowerCase());
             sender.sendMessage(Lang.translate(MessageType.GROUP_HAS_PERM, group.getName(), perm, formatBool(has)));
         }
+        
+        //per server perm
+        else if (world == null)
+        {
+            boolean has = group.hasOnServer(perm.toLowerCase(), server);
+            sender.sendMessage(Lang.translate(MessageType.GROUP_HAS_PERM_SERVER, group.getName(), perm, server, formatBool(has)));
+        }
+
+        //per server world perm
         else
         {
-            //per server perm
-            if (world == null)
-            {
-                boolean has = group.hasOnServer(perm.toLowerCase(), server);
-                sender.sendMessage(Lang.translate(MessageType.GROUP_HAS_PERM_SERVER, group.getName(), perm, server, formatBool(has)));
-            }
-
-            //per server world perm
-            else
-            {
-                boolean has = group.hasOnServerInWorld(perm.toLowerCase(), server, world);
-                sender.sendMessage(Lang.translate(MessageType.GROUP_HAS_PERM_SERVER_WORLD, group.getName(), perm, server, world, formatBool(has)));
-            }
+            boolean has = group.hasOnServerInWorld(perm.toLowerCase(), server, world);
+            sender.sendMessage(Lang.translate(MessageType.GROUP_HAS_PERM_SERVER_WORLD, group.getName(), perm, server, world, formatBool(has)));
         }
         return true;
     }
@@ -1851,7 +1900,7 @@ public class CommandHandler
             Sender s = plugin.getPlayer(user.getName());
             if (s != null)
             {
-                sender.sendMessage(Lang.translate(MessageType.PROMOTE_MESSAGE_TO_USER, nextgroup.getName()));
+                s.sendMessage(Lang.translate(MessageType.PROMOTE_MESSAGE_TO_USER, nextgroup.getName()));
             }
         }
 
@@ -1956,7 +2005,7 @@ public class CommandHandler
             Sender s = plugin.getPlayer(user.getName());
             if (s != null)
             {
-                sender.sendMessage(Lang.translate(MessageType.DEMOTE_MESSAGE_TO_USER, previousgroup.getName()));
+                s.sendMessage(Lang.translate(MessageType.DEMOTE_MESSAGE_TO_USER, previousgroup.getName()));
             }
         }
         return true;

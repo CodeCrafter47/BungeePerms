@@ -76,9 +76,9 @@ public class Statics
 
     public static boolean argAlias(String arg, String... aliases)
     {
-        for (int i = 0; i < aliases.length; i++)
+        for (String aliase : aliases)
         {
-            if (aliases[i].equalsIgnoreCase(arg))
+            if (aliase.equalsIgnoreCase(arg))
             {
                 return true;
             }
@@ -134,15 +134,7 @@ public class Statics
 
     public static void setField(Object instance, Object var, String varname)
     {
-        try
-        {
-            Field f = instance.getClass().getDeclaredField(varname);
-            f.setAccessible(true);
-            f.set(instance, var);
-        }
-        catch (Exception ex)
-        {
-        }
+        setField(instance.getClass(), instance, var, varname);
     }
 
     public static void setField(Class clazz, Object instance, Object var, String varname)
@@ -270,7 +262,7 @@ public class Statics
     {
         return isEmpty(append) ? "" : append + " ";
     }
-    
+
     public static boolean isInt(String s)
     {
         try
@@ -278,9 +270,23 @@ public class Statics
             Integer.parseInt(s);
             return true;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return false;
         }
+    }
+
+    public static String arrayToString(String[] arr, int start, int count, String seperator)
+    {
+        String s = "";
+        for (int i = 0; i < count; i++)
+        {
+            s += arr[start + i] + seperator;
+        }
+        if (s.length() >= seperator.length())
+        {
+            s = s.substring(0, s.length() - seperator.length());
+        }
+        return s;
     }
 }

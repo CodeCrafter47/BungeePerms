@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,6 +15,7 @@ import net.alpenblock.bungeeperms.platform.Sender;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode
 public class User implements PermEntity
 {
 
@@ -571,33 +573,38 @@ public class User implements PermEntity
         return ret;
     }
 
-    public int getOwnPermissionsCount()
+    public int getOwnPermissionsCount(String server, String world)
     {
         access();
 
         int count = perms.size();
 
-        for (Server s : servers.values())
+        Server s = getServer(server);
+        if (s == null)
         {
-            count += s.getPerms().size();
-            for (World w : s.getWorlds().values())
-            {
-                count += w.getPerms().size();
-            }
+            return count;
         }
+        count += s.getPerms().size();
+
+        World w = s.getWorld(world);
+        if (world == null)
+        {
+            return count;
+        }
+        count += w.getPerms().size();
 
         return count;
     }
 
-    public int getPermissionsCount()
+    public int getPermissionsCount(String server, String world)
     {
         access();
 
-        int count = getOwnPermissionsCount();
+        int count = getOwnPermissionsCount(server, world);
 
         for (Group g : groups)
         {
-            count += g.getOwnPermissionsCount();
+            count += g.getPermissionsCount(server, world);
         }
 
         return count;
@@ -611,15 +618,12 @@ public class User implements PermEntity
         return buildPrefix(sender);
     }
 
-    public String buildSuffix()
+    public String buildPrefix(Sender sender)
     {
-        access();
-
-        Sender sender = getSender();
-        return buildSuffix(sender);
+        return buildPrefix(sender != null ? sender.getServer() : null, sender != null ? sender.getWorld() : null);
     }
 
-    public String buildPrefix(Sender sender)
+    public String buildPrefix(String server, String world)
     {
         access();
 
@@ -636,7 +640,7 @@ public class User implements PermEntity
             }
 
             //server
-            Server s = g.getServer(sender != null ? sender.getServer() : null);
+            Server s = g.getServer(server);
             if (s != null)
             {
                 if (!Statics.isEmpty(s.getPrefix()))
@@ -645,7 +649,7 @@ public class User implements PermEntity
                 }
 
                 //world
-                World w = s.getWorld(sender != null ? sender.getWorld() : null);
+                World w = s.getWorld(world);
                 if (w != null)
                 {
                     if (!Statics.isEmpty(w.getPrefix()))
@@ -663,7 +667,7 @@ public class User implements PermEntity
         }
 
         //server
-        Server s = getServer(sender != null ? sender.getServer() : null);
+        Server s = getServer(server);
         if (s != null)
         {
             if (!Statics.isEmpty(s.getPrefix()))
@@ -672,7 +676,7 @@ public class User implements PermEntity
             }
 
             //world
-            World w = s.getWorld(sender != null ? sender.getWorld() : null);
+            World w = s.getWorld(world);
             if (w != null)
             {
                 if (!Statics.isEmpty(w.getPrefix()))
@@ -684,9 +688,9 @@ public class User implements PermEntity
 
         for (String p : prefixes)
         {
-            if (!ChatColor.strip(p.replaceAll("&", "§")).isEmpty()
+            if (!ChatColor.strip(p.replaceAll("&", ChatColor.COLOR_CHAR + "")).isEmpty()
                     && !prefix.isEmpty()
-                    && !ChatColor.strip(prefix.replaceAll("&", "§")).endsWith(" "))
+                    && !ChatColor.strip(prefix.replaceAll("&", ChatColor.COLOR_CHAR + "")).endsWith(" "))
             {
                 prefix += " ";
             }
@@ -698,7 +702,20 @@ public class User implements PermEntity
                 + (BungeePerms.getInstance().getConfig().isTerminatePrefixReset() ? ChatColor.RESET : "");
     }
 
+    public String buildSuffix()
+    {
+        access();
+
+        Sender sender = getSender();
+        return buildSuffix(sender);
+    }
+
     public String buildSuffix(Sender sender)
+    {
+        return buildSuffix(sender != null ? sender.getServer() : null, sender != null ? sender.getWorld() : null);
+    }
+
+    public String buildSuffix(String server, String world)
     {
         access();
 
@@ -715,7 +732,7 @@ public class User implements PermEntity
             }
 
             //server
-            Server s = g.getServer(sender != null ? sender.getServer() : null);
+            Server s = g.getServer(server);
             if (s != null)
             {
                 if (!Statics.isEmpty(s.getSuffix()))
@@ -724,7 +741,7 @@ public class User implements PermEntity
                 }
 
                 //world
-                World w = s.getWorld(sender != null ? sender.getWorld() : null);
+                World w = s.getWorld(world);
                 if (w != null)
                 {
                     if (!Statics.isEmpty(w.getSuffix()))
@@ -742,7 +759,7 @@ public class User implements PermEntity
         }
 
         //server
-        Server s = getServer(sender != null ? sender.getServer() : null);
+        Server s = getServer(server);
         if (s != null)
         {
             if (!Statics.isEmpty(s.getSuffix()))
@@ -751,7 +768,7 @@ public class User implements PermEntity
             }
 
             //world
-            World w = s.getWorld(sender != null ? sender.getWorld() : null);
+            World w = s.getWorld(world);
             if (w != null)
             {
                 if (!Statics.isEmpty(w.getSuffix()))
@@ -763,9 +780,9 @@ public class User implements PermEntity
 
         for (String suf : suffixes)
         {
-            if (!ChatColor.strip(suf.replaceAll("&", "§")).isEmpty()
+            if (!ChatColor.strip(suf.replaceAll("&", ChatColor.COLOR_CHAR + "")).isEmpty()
                     && !suffix.isEmpty()
-                    && !ChatColor.strip(suffix.replaceAll("&", "§")).endsWith(" "))
+                    && !ChatColor.strip(suffix.replaceAll("&", ChatColor.COLOR_CHAR + "")).endsWith(" "))
             {
                 suffix += " ";
             }

@@ -62,7 +62,7 @@ public class BPConfig
 
         //db
         backEndType = config.getEnumValue("backendtype", BackEndType.YAML);
-        UUIDPlayerDBType = config.getEnumValue("uuidplayerdb", UUIDPlayerDBType.None);
+        UUIDPlayerDBType = config.getEnumValue("uuidplayerdb", UUIDPlayerDBType.YAML);
         tablePrefix = config.getString("tablePrefix", "bungeeperms_");
         fetcherCooldown = config.getInt("uuidfetcher.cooldown", 3000);
         saveAllUsers = config.getBoolean("saveAllUsers", true);
@@ -84,6 +84,16 @@ public class BPConfig
         
         //other
         asyncCommands = config.getBoolean("async-commands", true);
+        
+        validate();
+    }
+    
+    public void validate()
+    {
+        if(useUUIDs && UUIDPlayerDBType == UUIDPlayerDBType.None)
+        {
+            BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_USEUUID_NONE_UUID_DB));
+        }
     }
 
     public void setUseUUIDs(boolean useUUIDs)

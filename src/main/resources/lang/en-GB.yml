@@ -33,7 +33,7 @@ error:
     already-inherits: '&4The group &6{0}&7 already inherits from &6{1}&4!'
     does-not-inherit: '&4The group &6{0}&4 does not inherit from group &6{1}&4!'
 user:
-  nu-users-found: '&7No players found!'
+  no-users-found: '&7No players found!'
   registered-users: '&7Following players are registered: '
   registered-users-count: '&7There are &6{0}&7 players registered.'
   permissions-list-header: '&7Permissions of the player &3{0}&7:'
@@ -130,6 +130,8 @@ common:
   display: '&7Display: &r{0}'
   prefix: '&7Prefix: &r{0}'
   suffix: '&7Suffix: &r{0}'
+  prefix-full: '&7Full prefix: &r{0}'
+  suffix-full: '&7Full suffix: &r{0}'
   permissions-list-item: '&7- &6{0}&7 (&6{1}&7{2}{3})'
   permissions-list-header-page: '&7Page &6{0}&7/&6{1}&7'
 general:
@@ -137,6 +139,7 @@ general:
   none: none
   default: default
   nondefault: non-default
+  misconfiguration: '&4Misconfiguration'
 log:
   extraction:
     extracting: extracting {0}
@@ -150,7 +153,25 @@ log:
     adding-default-groups-uuid: Adding default groups to {0} ({1})
   login: Login by {0}
   login-uuid: Login by {0} ({1})
+warning:
   intrusion-detected: '&4Possible intrusion detected. Sender is {0}'
+  misconfig:
+    bungee:
+      standalone: 'Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in standalone mode. Ignoring it ...'
+      serverdependend: 'Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in serverdependend mode. Ignoring it ...'
+      serverdependend-blacklist: 'Server {0}: Received a plugin message from Bukkit/Spigot but BungeePerms is in serverdependend-blacklist mode. Ignoring it ...'
+      servername: 'Server {0}: The server names of the Bungeecord config and BungeePerms config do not match.'
+      backend: 'Server {0}: The backend types of the BungeePerms configs do not match.'
+      uuidplayerdb: 'Server {0}: The uuidplayerdb types of the BungeePerms configs do not match.'
+      useuuid: 'Server {0}: The useuuids options of the BungeePerms configs do not match.'
+    bukkit:
+      standalone: Received a plugin message from Bungeecord but BungeePerms is in standalone mode. Ignoring it ...
+      servername: The server names of the Bungeecord config and BungeePerms config do not match.
+      backend: The backend types of the BungeePerms configs do not match.
+      uuidplayerdb: The uuidplayerdb types of the BungeePerms configs do not match.
+      useuuid: The useuuids options of the BungeePerms configs do not match.
+    bungee-bukkit-config: UUIDs on Bungeecord and Bukkit/Spigot differ. Check your Spigot/Bukkit and Bungeecord config!
+    useuuid-none-uuiddb: Die useUUIDs Option is aktiviert aber die uuidplayerdb ist auf none gestellt!
 help:
   welcome: Welcomes you to BungeePerms
   help: Shows this help

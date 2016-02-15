@@ -143,7 +143,7 @@ public class Config
             T[] constants = (T[]) def.getDeclaringClass().getEnumConstants();
             for (T constant : constants)
             {
-                if (constant.name().equals(s))
+                if (constant.name().equalsIgnoreCase(s))
                 {
                     return constant;
                 }
@@ -255,7 +255,7 @@ public class Config
 
     public List<String> getSubNodes(String node)
     {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
         try
         {
             for (Object o : fconfig.getConfigurationSection(node).getKeys(false).toArray())

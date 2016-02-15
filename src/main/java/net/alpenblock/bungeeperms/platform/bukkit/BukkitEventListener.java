@@ -11,7 +11,10 @@ import net.alpenblock.bungeeperms.Lang;
 import net.alpenblock.bungeeperms.PermissionsManager;
 import net.alpenblock.bungeeperms.Statics;
 import net.alpenblock.bungeeperms.User;
+import net.alpenblock.bungeeperms.io.BackEndType;
+import net.alpenblock.bungeeperms.io.UUIDPlayerDBType;
 import net.alpenblock.bungeeperms.platform.EventListener;
+import net.alpenblock.bungeeperms.platform.Sender;
 import net.alpenblock.bungeeperms.platform.bukkit.event.BungeePermsUserChangedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -54,11 +57,11 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
         //inject into console // seems to be best place here
         BPPermissible permissible = new BPPermissible(Bukkit.getConsoleSender(), null, Injector.getPermissible(Bukkit.getConsoleSender()));
         permissible.inject();
-        
+
         //uninject from players
-        for(Player p : Bukkit.getOnlinePlayers())
+        for (Player p : Bukkit.getOnlinePlayers())
         {
-            if(!(Injector.getPermissible(p) instanceof BPPermissible))
+            if (!(Injector.getPermissible(p) instanceof BPPermissible))
             {
                 User u = config.isUseUUIDs() ? pm().getUser(p.getUniqueId()) : pm().getUser(p.getName());
                 BPPermissible perm = new BPPermissible(p, u, Injector.getPermissible(p));
@@ -80,9 +83,9 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
 
         //uninject from console // seems to be best place here
         Injector.uninject(Bukkit.getConsoleSender());
-        
+
         //uninject from players
-        for(Player p : Bukkit.getOnlinePlayers())
+        for (Player p : Bukkit.getOnlinePlayers())
         {
             Injector.uninject(p);
         }
@@ -107,6 +110,14 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
             BungeePerms.getLogger().info(Lang.translate(Lang.MessageType.LOGIN, e.getPlayer().getName()));
         }
 
+        //remove user from cache if present
+        User oldu = config.isUseUUIDs() ? pm().getUser(uuid, false) : pm().getUser(playername, false);
+        if (oldu != null)
+        {
+            pm().removeUserFromCache(oldu);
+        }
+
+        //load user from db
         User u = config.isUseUUIDs() ? pm().getUser(uuid) : pm().getUser(playername);
         if (u == null)
         {
@@ -186,11 +197,21 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] bytes)
     {
-        String msg = new String(bytes);
-        BungeePerms.getLogger().info("msg=" + msg);
-        List<String> data = Statics.toList(msg, ";");
+        if (config.isStandalone())
+        {
+            BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_STANDALONE));
+            BungeePerms.getInstance().getDebug().log(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_STANDALONE));
+            BungeePerms.getInstance().getDebug().log("sender = BungeeCord");
+            BungeePerms.getInstance().getDebug().log("msg = " + new String(bytes));
+            return;
+        }
 
-        BungeePerms.getInstance().getDebug().log("msg=" + msg);
+        String msg = new String(bytes);
+        if (config.isDebug())
+        {
+            BungeePerms.getLogger().info("msg=" + msg);
+        }
+        List<String> data = Statics.toList(msg, ";");
 
         String cmd = data.get(0);
         String userorgroup = data.size() > 1 ? data.get(1) : null;
@@ -240,6 +261,42 @@ public class BukkitEventListener implements Listener, EventListener, PluginMessa
                 }
             };
             Bukkit.getScheduler().runTaskLater(BukkitPlugin.getInstance(), r, 1);
+        }
+        else if (cmd.equalsIgnoreCase("configcheck"))
+        {
+            String servername = data.get(1);
+            BackEndType backend = BackEndType.getByName(data.get(2));
+            UUIDPlayerDBType uuidplayerdb = UUIDPlayerDBType.getByName(data.get(3));
+            boolean useuuid = Boolean.parseBoolean(data.get(4));
+            if (!config.getServername().equals(servername))
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_SERVERNAME));
+            }
+            if (config.getBackEndType() != backend)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_BACKEND));
+            }
+            if (config.getUUIDPlayerDBType() != uuidplayerdb)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_UUIDPLAYERDB));
+            }
+            if (config.isUseUUIDs() != useuuid)
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUKKIT_USEUUID));
+            }
+        }
+        else if (cmd.equalsIgnoreCase("uuidcheck"))
+        {
+            if (!config.isUseUUIDs())
+            {
+                return;
+            }
+            String uuid = data.get(2);
+            Sender p = BukkitPlugin.getInstance().getPlayer(userorgroup);
+            if (p != null && !p.getUUID().equals(UUID.fromString(uuid)))
+            {
+                BungeePerms.getLogger().warning(Lang.translate(Lang.MessageType.MISCONFIGURATION) + ": " + Lang.translate(Lang.MessageType.MISCONFIG_BUNGEECORD_BUKKIT_CONFIG));
+            }
         }
     }
 

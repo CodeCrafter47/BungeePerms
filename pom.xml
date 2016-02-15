@@ -2,14 +2,28 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.alpenblock</groupId>
     <artifactId>BungeePerms</artifactId>
-    <version>3.0-CodeCrafter47-0.1-SNAPSHOT</version>
+    <version>3.0</version>
 
     <properties>
-        <build.number>unknown</build.number>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.major>3.0</build.major>
+        <build.type>SNAPSHOT</build.type>
+        <build.number>unknown</build.number>
+        <build.fullversion.file>${build.major}-${build.type}-${build.number}</build.fullversion.file>
+        <build.fullversion.resource>${build.major} ${build.type} #${build.number}</build.fullversion.resource>
+        <build.name>${project.artifactId}-${build.fullversion.file}</build.name>
+        <build.filename>${build.name}.${project.packaging}</build.filename>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>localdeployrepo</id>
+            <name>wea_ondara's Repository</name>
+            <url>http://repo.wea-ondara.net/repository/public/</url>
+        </repository>
+    </distributionManagement>
     
     <repositories>
         <repository>
@@ -86,6 +100,23 @@
         </resources>
         <plugins>
             <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.1</version>
@@ -103,6 +134,63 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <finalName>${build.name}</finalName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.3.1</version>
+                <executions>
+                    <execution>
+                        <id>default-install</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>install</phase>
+                        <configuration>
+                            <file>target/${build.filename}</file>
+                            <generatePom>false</generatePom>
+                            <pomFile>pom.xml</pomFile>
+                            <version>${build.fullversion.file}</version>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-file</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryId>${project.distributionManagement.repository.id}</repositoryId>
+                            <url>${project.distributionManagement.repository.url}</url>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${build.fullversion.file}</version>
+                            <file>target/${build.filename}</file>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -145,4 +233,7 @@
             <version>2.13.1</version>
         </dependency>
     </dependencies>
+    <properties>
+        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+    </properties>
 </project>
