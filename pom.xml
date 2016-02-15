@@ -233,7 +233,4 @@
             <version>2.13.1</version>
         </dependency>
     </dependencies>
-    <properties>
-        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
-    </properties>
 </project>
