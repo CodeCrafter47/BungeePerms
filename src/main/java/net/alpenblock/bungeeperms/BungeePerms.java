@@ -66,14 +66,17 @@ public class BungeePerms
                 Properties latest = new Properties();
                 latest.load(new URL("http://ci.codecrafter47.dyndns.eu/job/BungeePerms/lastSuccessfulBuild/artifact/target/classes/version.properties").openStream());
                 String latestVersion = latest.getProperty("build", "unknown");
-                int latestBuildNumber = Integer.valueOf(latestVersion);
-                if (latestBuildNumber > buildNumber)
+                if (!latestVersion.isEmpty() && !latestVersion.equals("unknown"))
                 {
-                    logger.info("There is a new version available at http://ci.codecrafter47.dyndns.eu/job/BungeePerms/");
-                }
-                else
-                {
-                    logger.info("Everything is up to date");
+                    int latestBuildNumber = Integer.valueOf(latestVersion);
+                    if (latestBuildNumber > buildNumber)
+                    {
+                        logger.info("There is a new version available at http://ci.codecrafter47.dyndns.eu/job/BungeePerms/");
+                    }
+                    else
+                    {
+                        logger.info("Everything is up to date");
+                    }
                 }
             }
         }
